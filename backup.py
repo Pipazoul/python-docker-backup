@@ -24,16 +24,20 @@ if not os.path.exists(backupFolder):
     
 
 print("Listing containers")
-for container in containers:
-    print(container.name)
-    # get volume name and path
-    print(container.attrs['Mounts'])
-    
+for container in containers:    
     # add volume to backup list {name: container_name, path: volume_path}
     for volume in container.attrs['Mounts']:
         # check folder size
-        folderSize = os.path.getsize(volume['Source'])
-        volumesToBackup.append({'name': container.name, 'path': volume['Source'], 'containerId': container.id, 'size': folderSize})
+        # check if volume is a bind mount
+        if volume['Type'] != "bind":
+            print("Skipping bind mount " + volume['Source'])
+        else:
+            print("Adding volume " + volume['Source'] + " to backup list")
+            # get folder size
+            folderSize = os.path.getsize(volume['Source'])
+            print("Folder size: " + str(folderSize) + " bytes")
+            volumesToBackup.append({'name': container.name, 'path': volume['Source'], 'containerId': container.id, 'size': folderSize})
+time.sleep(1)
 clear()
 print("--------------------")
 print("##Volumes to backup##")
@@ -44,6 +48,10 @@ for volume in volumesToBackup:
     folderSize += volume['size']
 print("--------------------")
 print("Total size: " + str(folderSize) + " bytes")
+# convert bytes to human readable format
+print("Total size: " + str(round(folderSize / 1024 / 1024, 2)) + " MB")
+# convert to GB
+print("Total size: " + str(round(folderSize / 1024 / 1024 / 1024, 2)) + " GB")
 
 # ask user to confirm backup
 confirm = input("Do you want to continue? [y/n]")
