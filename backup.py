@@ -7,6 +7,7 @@ import json
 backupFolder = "./backup"
 
 
+excludeContainers = []
 dockerClient = docker.from_env()
 containers = dockerClient.containers.list()
 
@@ -25,6 +26,10 @@ if not os.path.exists(backupFolder):
 
 print("Listing containers")
 for container in containers:    
+    if container.name in excludeContainers:
+        print("Skipping container " + container.name)
+        continue
+    else:
     # add volume to backup list {name: container_name, path: volume_path}
     for volume in container.attrs['Mounts']:
         # check folder size
